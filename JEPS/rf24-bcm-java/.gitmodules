@@ -1,3 +1,0 @@
-[submodule "cpp/RF24"]
-	path = cpp/RF24
-	url = https://github.com/stanleyseow/RF24
