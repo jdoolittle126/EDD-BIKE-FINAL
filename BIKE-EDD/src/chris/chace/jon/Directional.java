@@ -38,8 +38,8 @@ public class Directional {
 
 	private static void off() {
 		left = right = false;
-		//PIN_LEFT.setState(false);
-		//PIN_RIGHT.setState(false);
+		PIN_LEFT.setState(false);
+		PIN_RIGHT.setState(false);
 	}
 
 	private static void left() {
