@@ -10,7 +10,6 @@ import com.pi4j.io.gpio.event.GpioPinListenerDigital;
 
 public class Headlight {
 
-	private static boolean state;
 	private static GpioPinDigitalInput HEADLIGHT_IO;
 	private static GpioPinDigitalOutput PIN_HEADLIGHT;
 	
@@ -23,7 +22,7 @@ public class Headlight {
 			@Override
 			public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent event) {
 				if (event.getState().isHigh()) {
-					toggle();
+					PIN_HEADLIGHT.toggle();
 					System.out.println("DEBUG: Headlight toggled");
 				}
 					
@@ -32,8 +31,4 @@ public class Headlight {
 		System.out.println("DEBUG: Headlight Initiated");
 	}
 	
-	public static void toggle() {
-		state = !state;
-		PIN_HEADLIGHT.setState(state);
-	}
 }

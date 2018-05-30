@@ -5,7 +5,7 @@ import com.pi4j.io.gpio.GpioFactory;
 
 public class Controller {
 
-	static final int THREAD_SLEEP_LENGTH = 100, DIRECTIONAL_DURATION = 400, DIRECTIONAL_LIFESPAN = 15000, DISTANCE_MIN = 1000; //distance in mm
+	static final int THREAD_SLEEP_LENGTH = 500, DIRECTIONAL_LIFESPAN = 15, DISTANCE_MIN = 1000; //distance in mm
 	static int PIN_TRIGGER_DIRECTIONAL_LEFT = 2, PIN_TRIGGER_DIRECTIONAL_RIGHT = 3, 
 			PIN_TRIGGER_HEADLIGHT = 4, PIN_TRIGGER_RANGEFINDER = 5, PIN_DIRECTIONAL_LEFT = 6, PIN_DIRECTIONAL_RIGHT = 7, 
 			PIN_HEADLIGHT = 8, PIN_RANGEFINDER = 9;
@@ -35,6 +35,8 @@ public class Controller {
 		//Ultrasonic.init();
 		
 		while(running) {
+			Directional.update();
+			
 			try {
 				//System.out.println(Ultrasonic.getDistance());
 				//if(Ultrasonic.getDistance() < Controller.DISTANCE_MIN)

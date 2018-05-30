@@ -9,11 +9,13 @@ import com.pi4j.io.gpio.RaspiPin;
 import com.pi4j.io.gpio.event.GpioPinDigitalStateChangeEvent;
 import com.pi4j.io.gpio.event.GpioPinListenerDigital;
 import com.pi4j.io.gpio.trigger.GpioBlinkStateTrigger;
+import com.pi4j.io.gpio.trigger.GpioSetStateTrigger;
 
 public class Directional {
 	private static boolean left, right;
 	private static GpioPinDigitalInput PIN_BUTTON_LEFT, PIN_BUTTON_RIGHT;
 	private static GpioPinDigitalOutput PIN_LEFT, PIN_RIGHT;
+	private static int count_left = 0, count_right = 0;
 
 	public static void init() {
 		System.out.println("DEBUG: Initiating Directional");
@@ -25,14 +27,14 @@ public class Directional {
 		PIN_LEFT.setShutdownOptions(true, PinState.LOW);
 		PIN_RIGHT.setShutdownOptions(true, PinState.LOW);
 		
-		//PIN_BUTTON_LEFT.addTrigger(new GpioBlinkStateTrigger(PinState.HIGH, PIN_LEFT, Controller.DIRECTIONAL_LIFESPAN));
+		PIN_BUTTON_LEFT.addTrigger(new GpioSetStateTrigger(PinState.HIGH, PIN_RIGHT, PinState.LOW));
+		PIN_BUTTON_RIGHT.addTrigger(new GpioSetStateTrigger(PinState.HIGH, PIN_LEFT, PinState.LOW));
 		
 		PIN_BUTTON_LEFT.addListener(new GpioPinListenerDigital() {
 					@Override
 					public void handleGpioPinDigitalStateChangeEvent(GpioPinDigitalStateChangeEvent event) {
 						if (event.getState().isHigh())
 							left();
-					
 					}
 				});
 		
@@ -47,10 +49,27 @@ public class Directional {
 		System.out.println("DEBUG: Directional Initiated");
 	}
 
+	static void update() {
+		
+		if(left && count_left > 0) {
+			count_left--;
+			PIN_LEFT.toggle();
+		} else {
+			PIN_LEFT.low();
+		}
+		
+		if(right && count_right > 0) {
+			count_right--;
+			PIN_RIGHT.toggle();
+		} else {
+			PIN_RIGHT.low();
+		}
+	}
+	
 	private static void off() {
 		left = right = false;
-		PIN_LEFT.blink(0);
-		PIN_RIGHT.blink(0);
+		PIN_LEFT.setState(false);
+		PIN_RIGHT.setState(false);
 	}
 
 	private static void left() {
@@ -58,12 +77,12 @@ public class Directional {
 		if (right) {
 			off();
 			left = true;
-			PIN_LEFT.blink(Controller.DIRECTIONAL_DURATION, Controller.DIRECTIONAL_LIFESPAN);
+			count_left = Controller.DIRECTIONAL_LIFESPAN;
 		} else if (left)
 			off();
 		else {
 			left = true;
-			PIN_LEFT.blink(Controller.DIRECTIONAL_DURATION, Controller.DIRECTIONAL_LIFESPAN);
+			count_left = Controller.DIRECTIONAL_LIFESPAN;
 		}
 					
 	
@@ -74,12 +93,12 @@ public class Directional {
 		if (left) {
 			off();
 			right = true;
-			//PIN_RIGHT.blink(Controller.DIRECTIONAL_DURATION, Controller.DIRECTIONAL_LIFESPAN);
+			count_right = Controller.DIRECTIONAL_LIFESPAN;
 		} else if (right)
 			off();
 		else {
 			right = true;
-			//PIN_RIGHT.blink(Controller.DIRECTIONAL_DURATION, Controller.DIRECTIONAL_LIFESPAN);
+			count_right = Controller.DIRECTIONAL_LIFESPAN;;
 		}
 			
 	}
