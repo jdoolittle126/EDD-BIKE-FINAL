@@ -41,6 +41,6 @@ public class Controller {
 				Thread.sleep(Controller.THREAD_SLEEP_LENGTH);
 			}
 		}	
-		System.out.println("Program Termininated");
+		System.out.println("JEPS Program Termininated");
 	}
 }

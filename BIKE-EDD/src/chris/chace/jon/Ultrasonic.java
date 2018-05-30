@@ -1,99 +1,59 @@
-import com.pi4j.io.gpio.GpioController;
-import com.pi4j.io.gpio.GpioFactory;
+package chris.chace.jon;
+
 import com.pi4j.io.gpio.GpioPinDigitalOutput;
 import com.pi4j.io.gpio.PinState;
 import com.pi4j.io.gpio.RaspiPin;
 import com.pi4j.io.gpio.*;
 
-//to control pwm pins
-//pwm1 23,24 ; pwm0 1, 26
-import com.pi4j.wiringpi.Gpio;
-import com.pi4j.wiringpi.SoftPwm;
-
 public class Ultrasonic {
-    //bcm, GPIO_#
-    private int PIN_ECHO,PIN_TRIG;
-    private long REJECTION_START=1000,REJECTION_TIME=1000; //ns
+    private static long REJECTION_START = 1000, REJECTION_TIME = 23529411;
+    private static GpioPinDigitalOutput PIN_TRIG;
+    private static GpioPinDigitalInput PIN_ECHO;
 
-    private GpioController gpio;//gpio controller ; using io.gpio
-    private GpioPinDigitalOutput//gpio output pins; using io.gpio, digital pins
-        pin_trig;
-    private GpioPinDigitalInput
-        pin_echo;
-
-    public Ultrasonic(int ECHO, int TRIG, long REJ_START,long REJ_TIME){ //GPIO
-        this.PIN_ECHO=ECHO;
-        this.PIN_TRIG=TRIG;
-        this.REJECTION_START=REJ_START; this.REJECTION_TIME=REJ_TIME;
-
-        gpio=GpioFactory.getInstance();// create gpio controller , io.gpio
-
-        //motor_1_left_en=gpio.provisionDigitalOutputPin(RaspiPin.GPIO_01, "motor_1_left_en", PinState.HIGH);
-        pin_trig=gpio.provisionDigitalOutputPin(RaspiPin.getPinByAddress(PIN_TRIG), "pin_trig", PinState.HIGH);//pin,tag,initial-state
-        pin_trig.setShutdownOptions(true, PinState.LOW);
-
-        pin_echo=gpio.provisionDigitalInputPin(RaspiPin.getPinByAddress(PIN_ECHO),PinPullResistance.PULL_DOWN);//pin,tag,initial-state
-
+    public static void init(){
+    	System.out.println("DEBUG: Initiating Rangefinder");
+        PIN_TRIG = Controller.gpio.provisionDigitalOutputPin(RaspiPin.getPinByAddress(Controller.PIN_TRIGGER_RANGEFINDER), "pin_trig", PinState.HIGH);
+        //PIN_TRIG.setShutdownOptions(true, PinState.LOW);
+        PIN_ECHO = Controller.gpio.provisionDigitalInputPin(RaspiPin.getPinByAddress(Controller.PIN_RANGEFINDER), PinPullResistance.PULL_DOWN);
+        System.out.println("DEBUG: Rangefinder Initiated");
     }
 
-    public int getDistance() throws Exception{ //in milimeters
-            int distance=0; long start_time, end_time,rejection_start=0,rejection_time=0;
-            //Start ranging- trig should be in high state for 10us to generate ultrasonic signal
-            //this will generate 8 cycle sonic burst.
-            // produced signal would looks like, _|-----|
-            pin_trig.low(); busyWaitMicros(2);
-            pin_trig.high(); busyWaitMicros(10);
-            pin_trig.low(); 
+    public static int getDistance() throws Exception {
+            int distance=0; 
+            long start_time, end_time,rejection_start=0,rejection_time=0;
+            PIN_TRIG.low(); busyWaitMicros(2);
+            PIN_TRIG.high(); busyWaitMicros(10);
+            PIN_TRIG.low(); 
 
-            //echo pin high time is propotional to the distance _|----|
-            //distance calculation
-            while(pin_echo.isLow()){ //wait until echo get high
-                busyWaitNanos(1); //wait 1ns
+            while(PIN_ECHO.isLow()) {
+                busyWaitNanos(1);
                 rejection_start++;
-                if(rejection_start==REJECTION_START) return -1; //infinity
+                if(rejection_start==REJECTION_START) return -1;
             }
+            
             start_time=System.nanoTime();
-
-            while(pin_echo.isHigh()){ //wait until echo get low
-                busyWaitNanos(1); //wait 1ns
+            while(PIN_ECHO.isHigh()) {
+                busyWaitNanos(1);
                 rejection_time++;
-                if(rejection_time==REJECTION_TIME) return -1; //infinity
+                if(rejection_time == REJECTION_TIME) return -1;
             }
+            
             end_time=System.nanoTime();
-
-            distance=(int)((end_time-start_time)/5882.35294118); //distance in mm
-
+            distance=(int) ((end_time-start_time)/5882.35294118);
+            return distance;
     }
 
-    public static void busyWaitMicros(long micros){
+    public static void busyWaitMicros(long micros) {
         long waitUntil = System.nanoTime() + (micros * 1_000);
-        while(waitUntil > System.nanoTime()){
-            ;
+        while(waitUntil > System.nanoTime()) {
+        	;
         }
     }
 
-    public static void busyWaitNanos(long nanos){
+    public static void busyWaitNanos(long nanos) {
         long waitUntil = System.nanoTime() + nanos;
         while(waitUntil > System.nanoTime()){
             ;
-        }
-    }
-
-}
-Test_Ultrasonic.java
-
-public class Test_Ultrasonic{
-    public static void main(String[] args) throws Exception{
-        PiJavaUltrasonic sonic=new PiJavaUltrasonic(
-            0,//ECO 11
-            1,//TRIG 22
-            1000,//REJECTION_START ; long
-            23529411 //REJECTION_TIME ; long
-        );
-        System.out.println("Start");
-        while(true){
-            System.out.println("distance "+sonic.getDistance()+"mm");
-            Thread.sleep(1000); //1s
         }
     }
 
